@@ -266,12 +266,7 @@ void HX8347::drawString(uint16_t x, uint16_t y, char *c, uint16_t color, uint8_t
   }
 }
 
-int HX8347::RGB(int r,int g,int b)
-{
-return r << 16 | g << 8 | b;
-}
-
-void HX8347::drawCircle(uint16_t x0, uint16_t y0, uint16_t r, 
+/*void HX8347::drawCircle(uint16_t x0, uint16_t y0, uint16_t r, 
 			uint16_t color) {
   drawPixel(x0, y0+r, color);
   drawPixel(x0, y0-r, color);
@@ -279,7 +274,7 @@ void HX8347::drawCircle(uint16_t x0, uint16_t y0, uint16_t r,
   drawPixel(x0-r, y0, color);
 
   drawCircleHelper(x0, y0, r, 0xF, color);
-}
+}*/
 
 void HX8347::drawCircleHelper(uint16_t x0, uint16_t y0, uint16_t r, uint8_t cornername,
 			uint16_t color) {
@@ -390,7 +385,7 @@ HX8347::HX8347(uint8_t cs, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t reset) {
   digitalWrite(_reset, HIGH); 
   pinMode(_reset, OUTPUT); 
 
-  csport = digitalPinToPort(_cs);
+  /*csport = digitalPinToPort(_cs);
   cdport = digitalPinToPort(_cd);
   wrport = digitalPinToPort(_wr);
   rdport = digitalPinToPort(_rd);
@@ -399,7 +394,7 @@ HX8347::HX8347(uint8_t cs, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t reset) {
   cdpin = digitalPinToBitMask(_cd);
   wrpin = digitalPinToBitMask(_wr);
   rdpin = digitalPinToBitMask(_rd);
-
+*/
   cursor_y = cursor_x = 0;
   textsize = 1;
   textcolor = 0xFFFF;
