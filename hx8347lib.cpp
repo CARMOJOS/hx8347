@@ -506,7 +506,7 @@ void HX8347::fillScreen(uint16_t color) {
   //digitalWrite(_cs, HIGH);
 }
 
-inline void HX8347::setWriteDir(void) {
+/*inline void HX8347::setWriteDir(void) {
 #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined (__AVR_ATmega328) || (__AVR_ATmega8__)
   DATADDR2 |= DATA2_MASK;
   DATADDR1 |= DATA1_MASK;
@@ -522,7 +522,7 @@ inline void HX8347::setWriteDir(void) {
 #else
   #error "No pins defined!"
 #endif
-}
+}*/
 
 void HX8347::goTo(int x, int y) {
   Address_set(x, x,y,y);     // GRAM Address Set (Horizontal Address) (R20h)
