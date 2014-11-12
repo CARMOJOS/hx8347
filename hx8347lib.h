@@ -13,9 +13,15 @@ class HX8347 : public Print {
   void H_line(uint16_t x0, uint16_t y0, uint16_t length, uint16_t color);
   void Rect(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h, uint16_t color);
   void Rectf(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h, uint16_t color);
-  
-
-    virtual size_t write(uint8_t);
+  void drawRoundRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t r,uint16_t color);
+  void drawTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color);
+  void fillTriangle ( int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color);
+  void drawCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color);
+  void fillScreen(uint16_t color);
+  void goHome(void);
+  void goTo(int x, int y);
+  virtual size_t write(uint8_t);
+  void setWriteDir(void);
 
   void drawChar(uint16_t x, uint16_t y, char c, uint16_t color, uint8_t s = 1);
   void drawString(uint16_t x, uint16_t y, char *c, uint16_t color, uint8_t s = 1);

@@ -66,7 +66,7 @@ void HX8347::Lcd_Write_Com_Data(unsigned char com,unsigned char dat)
 
 void HX8347::Address_set(unsigned int x1,unsigned int y1,unsigned int x2,unsigned int y2)
 {
-	Lcd_Write_Com_Data(0x02,x1>>8);
+        Lcd_Write_Com_Data(0x02,x1>>8);
 	Lcd_Write_Com_Data(0x03,x1);
 	Lcd_Write_Com_Data(0x04,x2>>8);
 	Lcd_Write_Com_Data(0x05,x2);
@@ -133,7 +133,7 @@ reset();
 
 	// Display Setting
 	Lcd_Write_Com_Data(0x01,0x06); // IDMON=0, INVON=1, NORON=1, PTLON=0
-	Lcd_Write_Com_Data(0x16,0xC8); // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0   0048
+	Lcd_Write_Com_Data(0x16,0xC0); // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0   0048
 	Lcd_Write_Com_Data(0x23,0x95); // N_DC=1001 0101
 	Lcd_Write_Com_Data(0x24,0x95); // PI_DC=1001 0101
 	Lcd_Write_Com_Data(0x25,0xFF); // I_DC=1111 1111
@@ -266,7 +266,7 @@ void HX8347::drawString(uint16_t x, uint16_t y, char *c, uint16_t color, uint8_t
   }
 }
 
-/*void HX8347::drawCircle(uint16_t x0, uint16_t y0, uint16_t r, 
+void HX8347::drawCircle(uint16_t x0, uint16_t y0, uint16_t r, 
 			uint16_t color) {
   drawPixel(x0, y0+r, color);
   drawPixel(x0, y0-r, color);
@@ -274,7 +274,7 @@ void HX8347::drawString(uint16_t x, uint16_t y, char *c, uint16_t color, uint8_t
   drawPixel(x0-r, y0, color);
 
   drawCircleHelper(x0, y0, r, 0xF, color);
-}*/
+}
 
 void HX8347::drawCircleHelper(uint16_t x0, uint16_t y0, uint16_t r, uint8_t cornername,
 			uint16_t color) {
@@ -316,6 +316,7 @@ void HX8347::drawCircleHelper(uint16_t x0, uint16_t y0, uint16_t r, uint8_t corn
 void HX8347::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 {
   // check rotation, move pixel around if necessary
+  Serial.println("In drawPixel");
   switch (rotation) {
   case 1:
     swap(x, y);
@@ -330,7 +331,11 @@ void HX8347::drawPixel(uint16_t x, uint16_t y, uint16_t color)
     y = TFTHEIGHT - y - 1;
     break;
   }
-    
+  
+  Serial.print("X "); Serial.println(x);
+  Serial.print("TFTWIDTH "); Serial.println(TFTWIDTH);
+  Serial.print("Y "); Serial.println(y);
+  Serial.print("TFTHEIGHT "); Serial.println(TFTHEIGHT);  
   if ((x >= TFTWIDTH) || (y >= TFTHEIGHT)) return;
   
   Address_set(x,y,x,y);
@@ -338,6 +343,190 @@ void HX8347::drawPixel(uint16_t x, uint16_t y, uint16_t color)
   //Lcd_Write_Com_Data(TFTLCD_GRAM_VER_AD, y); // GRAM Address Set (Vertical Address) (R21h)
   //Lcd_Write_Com(TFTLCD_RW_GRAM);  // Write Data to GRAM (R22h)
   Lcd_Write_Data(color);
+}
+
+void HX8347::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, 
+		      uint16_t color) {
+  // if you're in rotation 1 or 3, we need to swap the X and Y's
+
+  Lcd_Write_Com(0x02c); //write_memory_start
+  digitalWrite(_cd,HIGH);
+  digitalWrite(_cs,LOW);
+  int16_t steep = abs(y1 - y0) > abs(x1 - x0);
+  Serial.print("abs y "); Serial.println(abs(y1-y0));
+  Serial.print("steep "); Serial.println(steep);
+  if (steep) {
+    swap(x0, y0);
+    swap(x1, y1);
+  }
+
+  if (x0 > x1) {
+    swap(x0, x1);
+    swap(y0, y1);
+  }
+
+  int16_t dx, dy;
+  dx = x1 - x0;
+  //dy = abs(y1 - y0);
+  dy = abs(y1 - y0);
+
+  int16_t err = dx / 2;
+  int16_t ystep;
+
+  if (y0 < y1) {
+    ystep = 1;
+  } else {
+    ystep = -1;}
+
+  for (; x0<=x1; x0++) {
+    if (steep) {
+      Serial.print("y0 "); Serial.println(y0);
+      Serial.print("x0 "); Serial.println(x0);
+      drawPixel(y0, x0, color);
+      delay(5);
+    } else {
+      drawPixel(x0, y0, color);
+    }
+    err -= dy;
+    if (err < 0) {
+      y0 += ystep;
+      err += dx;
+    }
+  }
+  digitalWrite(_cs,HIGH);
+}
+
+void HX8347::drawTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color)
+{
+  drawLine(x0, y0, x1, y1, color);
+  drawLine(x1, y1, x2, y2, color);
+  drawLine(x2, y2, x0, y0, color); 
+}
+
+void HX8347::fillTriangle ( int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color)
+{
+  if (y0 > y1) {
+    swap(y0, y1); swap(x0, x1);
+  }
+  if (y1 > y2) {
+    swap(y2, y1); swap(x2, x1);
+  }
+  if (y0 > y1) {
+    swap(y0, y1); swap(x0, x1);
+  }
+
+  int32_t dx1, dx2, dx3; // Interpolation deltas
+  int32_t sx1, sx2, sy; // Scanline co-ordinates
+
+  sx2=(int32_t)x0 * (int32_t)1000; // Use fixed point math for x axis values
+  sx1 = sx2;
+  sy=y0;
+
+  // Calculate interpolation deltas
+  if (y1-y0 > 0) dx1=((x1-x0)*1000)/(y1-y0);
+    else dx1=0;
+  if (y2-y0 > 0) dx2=((x2-x0)*1000)/(y2-y0);
+    else dx2=0;
+  if (y2-y1 > 0) dx3=((x2-x1)*1000)/(y2-y1);
+    else dx3=0;
+
+  // Render scanlines (horizontal lines are the fastest rendering method)
+  if (dx1 > dx2)
+  {
+    for(; sy<=y1; sy++, sx1+=dx2, sx2+=dx1)
+    {
+      H_line(sx1/1000, sy, (sx2-sx1)/1000, color);
+    }
+    sx2 = x1*1000;
+    sy = y1;
+    for(; sy<=y2; sy++, sx1+=dx2, sx2+=dx3)
+    {
+      H_line(sx1/1000, sy, (sx2-sx1)/1000, color);
+    }
+  }
+  else
+  {
+    for(; sy<=y1; sy++, sx1+=dx1, sx2+=dx2)
+    {
+      H_line(sx1/1000, sy, (sx2-sx1)/1000, color);
+    }
+    sx1 = x1*1000;
+    sy = y1;
+    for(; sy<=y2; sy++, sx1+=dx3, sx2+=dx2)
+    {
+      H_line(sx1/1000, sy, (sx2-sx1)/1000, color);
+    }
+  }
+}
+
+void HX8347::drawRoundRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t r, uint16_t color) {
+  digitalWrite(_cd,HIGH);
+  digitalWrite(_cs,LOW);
+  // smarter version
+  H_line(x+r, y, w-2*r, color);
+  H_line(x+r, y+h-1, w-2*r, color);
+  V_line(x, y+r, h-2*r, color);
+  V_line(x+w-1, y+r, h-2*r, color);
+  // draw four corners
+  drawCircleHelper(x+r, y+r, r, 1, color);
+  drawCircleHelper(x+w-r-1, y+r, r, 2, color);
+  drawCircleHelper(x+w-r-1, y+h-r-1, r, 4, color);
+  drawCircleHelper(x+r, y+h-r-1, r, 8, color);
+  digitalWrite(_cs,HIGH);  
+}
+
+void HX8347::goHome(void) {
+  goTo(0,0);
+}
+
+void HX8347::fillScreen(uint16_t color) {
+  //digitalWrite(_cd,HIGH);
+  //digitalWrite(_cs,LOW);
+  goHome();
+  uint32_t i;
+  
+  i = 320;
+  i *= 240;
+  
+  *portOutputRegister(csport) &= ~cspin;
+  //digitalWrite(_cs, LOW);
+  *portOutputRegister(cdport) |= cdpin;
+  //digitalWrite(_cd, HIGH);
+  *portOutputRegister(rdport) |= rdpin;
+  //digitalWrite(_rd, HIGH);
+  *portOutputRegister(wrport) |= wrpin;
+  digitalWrite(_wr, HIGH);
+
+  setWriteDir();
+  while (i--) {
+    Lcd_Write_Data(color); 
+  }
+
+  *portOutputRegister(csport) |= cspin;
+  //digitalWrite(_cs, HIGH);
+}
+
+inline void HX8347::setWriteDir(void) {
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined (__AVR_ATmega328) || (__AVR_ATmega8__)
+  DATADDR2 |= DATA2_MASK;
+  DATADDR1 |= DATA1_MASK;
+#elif defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2561__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) 
+
+  #ifdef USE_ADAFRUIT_SHIELD_PINOUT
+  DDRH |= 0x78;
+  DDRB |= 0xB0;
+  DDRG |= _BV(5);
+  #else
+  MEGA_DATADDR = 0xFF;
+  #endif
+#else
+  #error "No pins defined!"
+#endif
+}
+
+void HX8347::goTo(int x, int y) {
+  Address_set(x, x,y,y);     // GRAM Address Set (Horizontal Address) (R20h)
+  Lcd_Write_Com(0x0022);            // Write Data to GRAM (R22h)
 }
 
 void HX8347::LCD_Clear(unsigned int j)                   
